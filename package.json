@@ -1,5 +1,5 @@
 {
-  "name": "kibos3-optimizer",
+  "name": "s3-optimizer",
   "version": "0.0.1",
   "description": "s3 optimizer",
   "main": "app.js",
