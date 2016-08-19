@@ -1,3 +1,5 @@
 /node_modules
 
 /data/userprofile
+/data/workorders
+/data/audits

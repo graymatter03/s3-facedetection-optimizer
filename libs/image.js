@@ -7,7 +7,7 @@ var async = require('async');
 
 var imageLib = {
 	
-	optimizeImages: function (listFile, cb) {
+	optimizeImages: function (listFile, isThumbnail, cb) {
 		
 		var $self = this;
 
@@ -18,7 +18,7 @@ var imageLib = {
 				cb(err, null);	
 			} else {
 				
-				$self.downloadAllImages(res, function(err, res) {
+				$self.downloadAllImages(res, isThumbnail, function(err, res) {
 
 					cb(null, res);	
 
@@ -30,12 +30,16 @@ var imageLib = {
 		
 	},
 
-	getImageUrl: function (id, width, height) {
-		return 'https://res.cloudinary.com/dmktcahwt/image/upload/w_' + width + ',h_' + height + ',c_thumb,g_face/' + id;
+	getImageUrl: function (id, isThumbnail, width, height) {
+		if (isThumbnail) {
+			return 'https://res.cloudinary.com/dmktcahwt/image/upload/w_' + width + ',h_' + height + ',c_thumb,g_face/' + id;	
+		} else {
+			return 'https://res.cloudinary.com/dmktcahwt/image/upload/' + id;
+		}
+		
 	},
 	
 	getAllImages: function (listFile, cb) {
-		
 		
 		var file = './data/' + listFile;
 		var csvData = [];
@@ -44,7 +48,11 @@ var imageLib = {
 		fs.createReadStream(file)
 			.pipe(parse({delimiter: ','}))
 			.on('data', function(csvrow) {
-				csvData.push(csvrow);        
+
+				if (csvrow == 'audits/khkcc4fpb6xdr6qdslow' || csvData.length > 0) {
+					csvData.push(csvrow);  
+				}
+				      
 		})
 		.on('end',function() {
 			cb(null, csvData);
@@ -59,30 +67,43 @@ var imageLib = {
 			//console.log('content-type:', res.headers['content-type']);
 			//console.log('content-length:', res.headers['content-length']);
 		
-			request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+			request(uri)
+				.pipe(fs.createWriteStream(filename))
+				.on('error', function(err) {
+					console.log(err)
+				})
+				.on('close', callback);
 
 		});
 		
 	},
 
-	downloadAllImages: function (imageList, cb) {
+	downloadAllImages: function (imageList, isThumbnail, cb) {
 
 		var $self = this;
 
-		async.map(imageList, function (image, callback) {
+		async.mapSeries(imageList, function (image, callback) {
 
-			var url = $self.getImageUrl(image, 150, 150);
+			var url = $self.getImageUrl(image, isThumbnail, 150, 150);
 
 			console.log('image: ', url);
 
-			$self.downloadImage(url, 'data/' + image + '_t.jpg', function(){
+			var name = 'data/' + image;
 
-				console.log('downloaded: ', image);
+			name += (isThumbnail ? '_t.jpg' : '.jpg' );
 
-				//upload to s3
-				callback(null, true)
+			//setTimeout(function(){
 
-			});
+				$self.downloadImage(url, name, function(){
+
+					console.log('downloaded: ', image);
+
+					//upload to s3
+					callback(null, true)
+
+				});
+
+			//}, 500);
 
 		}, 
 		function(err, results) {
