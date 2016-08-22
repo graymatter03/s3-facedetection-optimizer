@@ -49,7 +49,7 @@ var imageLib = {
 			.pipe(parse({delimiter: ','}))
 			.on('data', function(csvrow) {
 
-				if (csvrow == 'audits/khkcc4fpb6xdr6qdslow' || csvData.length > 0) {
+				if (csvrow == 'audits/dnektrpvuc7cmqzlke1wt' || csvData.length > 0) {
 					csvData.push(csvrow);  
 				}
 				      
@@ -57,6 +57,7 @@ var imageLib = {
 		.on('end',function() {
 			cb(null, csvData);
 		});
+
 		
 	},
 	
@@ -83,7 +84,7 @@ var imageLib = {
 		var $self = this;
 
 		async.mapSeries(imageList, function (image, callback) {
-
+			
 			var url = $self.getImageUrl(image, isThumbnail, 150, 150);
 
 			console.log('image: ', url);
